@@ -536,7 +536,7 @@ Additional rules:
 - Return ONLY the poem text itself`;
 
     try {
-      const res = await fetch('http://localhost:3001/api/poem', {
+      const res = await fetch('https://reeshenoy-github-io.onrender.com/api/poem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
