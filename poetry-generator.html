@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verse — Mood Poetry Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0e0c0a;
+    --parchment: #f5f0e8;
+    --parchment-dark: #ece5d6;
+    --muted: #8a7f72;
+    --accent: #b5451b;
+    --accent-soft: #e8c9be;
+    --border: rgba(14,12,10,0.12);
+    --border-strong: rgba(14,12,10,0.25);
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    position: relative;
+  }
+
+  .brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(48px, 8vw, 80px);
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .brand span {
+    color: var(--accent);
+  }
+
+  .tagline {
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .rule {
+    width: 60px;
+    height: 1px;
+    background: var(--border-strong);
+    margin: 1.2rem auto;
+  }
+
+  /* Main container */
+  .container {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  /* Section labels */
+  .label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Mood grid */
+  .mood-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .mood-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .mood-btn {
+    padding: 10px 8px;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-style: italic;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+
+  .mood-btn:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .mood-btn.active {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--parchment);
+  }
+
+  /* Style tabs */
+  .style-tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .style-tab {
+    flex: 1;
+    padding: 9px 6px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border-strong);
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+
+  .style-tab:last-child { border-right: none; }
+  .style-tab:hover { background: var(--parchment-dark); color: var(--ink); }
+  .style-tab.active { background: var(--ink); color: var(--parchment); }
+
+  /* Length selector */
+  .length-tabs {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .length-tab {
+    flex: 1;
+    padding: 9px 6px;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border-strong);
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 400;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .length-tab:last-child { border-right: none; }
+  .length-tab:hover { background: var(--parchment-dark); color: var(--ink); }
+  .length-tab.active { background: var(--ink); color: var(--parchment); }
+
+  .length-tab small {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    opacity: 0.65;
+    margin-top: 2px;
+    text-transform: none;
+  }
+
+  /* Theme input */
+  .theme-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .theme-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: var(--parchment);
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-style: italic;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .theme-input:focus { border-color: var(--ink); }
+  .theme-input::placeholder { color: var(--muted); }
+
+  .gen-btn {
+    padding: 12px 24px;
+    background: var(--accent);
+    border: none;
+    border-radius: 2px;
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+
+  .gen-btn:hover { opacity: 0.88; }
+  .gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Poem display */
+  .poem-stage {
+    background: var(--parchment-dark);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    min-height: 260px;
+    padding: 2.5rem 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .poem-stage::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.6s ease;
+  }
+
+  .poem-stage.loaded::before { transform: scaleX(1); }
+
+  .poem-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+    font-family: 'Jost', sans-serif;
+  }
+
+  .poem-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.9;
+    color: var(--ink);
+    white-space: pre-line;
+    opacity: 0;
+    transition: opacity 0.5s ease 0.2s;
+  }
+
+  .poem-stage.loaded .poem-body { opacity: 1; }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 200px;
+    color: var(--muted);
+  }
+
+  .empty-icon {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-style: italic;
+    opacity: 0.3;
+  }
+
+  .empty-text {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+  }
+
+  .loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes pulse {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Footer actions */
+  .poem-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .poem-meta {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    padding: 7px 16px;
+    font-family: 'Jost', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .error-msg {
+    color: var(--accent);
+    font-size: 13px;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  /* Page fade in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  header { animation: fadeUp 0.6s ease both; }
+  .container > * { animation: fadeUp 0.6s ease both; }
+  .container > *:nth-child(1) { animation-delay: 0.1s; }
+  .container > *:nth-child(2) { animation-delay: 0.15s; }
+  .container > *:nth-child(3) { animation-delay: 0.2s; }
+  .container > *:nth-child(4) { animation-delay: 0.25s; }
+  .container > *:nth-child(5) { animation-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">V<span>erse</span></div>
+  <div class="rule"></div>
+  <p class="tagline">A mood-based poetry generator</p>
+</header>
+
+<div class="container">
+
+  <!-- Mood selection -->
+  <div>
+    <div class="label">Your mood</div>
+    <div class="mood-grid" id="mood-grid">
+      <button class="mood-btn active" data-mood="melancholic">Melancholic</button>
+      <button class="mood-btn" data-mood="joyful">Joyful</button>
+      <button class="mood-btn" data-mood="nostalgic">Nostalgic</button>
+      <button class="mood-btn" data-mood="restless">Restless</button>
+      <button class="mood-btn" data-mood="serene">Serene</button>
+      <button class="mood-btn" data-mood="longing">Longing</button>
+      <button class="mood-btn" data-mood="hopeful">Hopeful</button>
+      <button class="mood-btn" data-mood="angry">Angry</button>
+    </div>
+  </div>
+
+  <!-- Style -->
+  <div>
+    <div class="label">Form</div>
+    <div class="style-tabs" id="style-tabs">
+      <button class="style-tab active" data-style="free verse">Free Verse</button>
+      <button class="style-tab" data-style="haiku">Haiku</button>
+      <button class="style-tab" data-style="sonnet">Sonnet</button>
+      <button class="style-tab" data-style="ode">Ode</button>
+      <button class="style-tab" data-style="limerick">Limerick</button>
+    </div>
+  </div>
+
+  <!-- Length -->
+  <div>
+    <div class="label">Length</div>
+    <div class="length-tabs" id="length-tabs">
+      <button class="length-tab active" data-length="tiny">Tiny<small>4–6 lines</small></button>
+      <button class="length-tab" data-length="short">Short<small>8–10 lines</small></button>
+      <button class="length-tab" data-length="medium">Medium<small>14–18 lines</small></button>
+      <button class="length-tab" data-length="long">Long<small>24–30 lines</small></button>
+    </div>
+  </div>
+
+  <!-- Theme + generate -->
+  <div>
+    <div class="label">Theme (optional)</div>
+    <div class="theme-row">
+      <input
+        type="text"
+        id="theme-input"
+        class="theme-input"
+        placeholder="autumn rain, a letter unsent, the city at 3am…"
+      />
+      <button class="gen-btn" id="gen-btn" onclick="generatePoem()">Compose</button>
+    </div>
+  </div>
+
+  <!-- Poem stage -->
+  <div>
+    <div class="poem-stage" id="poem-stage">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">&ldquo;&rdquo;</div>
+        <div class="empty-text">Select a mood and compose your verse</div>
+      </div>
+    </div>
+    <div class="poem-footer" id="poem-footer" style="display:none;">
+      <span class="poem-meta" id="poem-meta"></span>
+      <button class="copy-btn" onclick="copyPoem()">Copy</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let selectedMood = 'melancholic';
+  let selectedStyle = 'free verse';
+  let selectedLength = 'tiny';
+  let currentPoem = '';
+
+  document.getElementById('mood-grid').addEventListener('click', e => {
+    const btn = e.target.closest('.mood-btn');
+    if (!btn) return;
+    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMood = btn.dataset.mood;
+  });
+
+  document.getElementById('style-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.style-tab');
+    if (!btn) return;
+    document.querySelectorAll('.style-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedStyle = btn.dataset.style;
+  });
+
+  document.getElementById('length-tabs').addEventListener('click', e => {
+    const btn = e.target.closest('.length-tab');
+    if (!btn) return;
+    document.querySelectorAll('.length-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedLength = btn.dataset.length;
+  });
+
+  document.getElementById('theme-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') generatePoem();
+  });
+
+  async function generatePoem() {
+    const theme = document.getElementById('theme-input').value.trim();
+    const btn = document.getElementById('gen-btn');
+    const stage = document.getElementById('poem-stage');
+    const footer = document.getElementById('poem-footer');
+
+    btn.disabled = true;
+    stage.classList.remove('loaded');
+    footer.style.display = 'none';
+
+    stage.innerHTML = `<div class="loading-state"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+
+    const themeClause = theme ? ` on the theme of "${theme}"` : '';
+    const styleGuide = {
+      'free verse': 'Free verse, rich imagery, no rhyme required.',
+      'haiku': 'Haiku: exactly 3 lines, 5–7–5 syllable structure.',
+      'sonnet': 'Sonnet: 14 lines, iambic pentameter feel, ABAB CDCD EFEF GG rhyme scheme.',
+      'ode': 'Ode: elevated tone, celebratory or mournful address to a subject.',
+      'limerick': 'Limerick: AABBA rhyme, bouncy rhythm even if the mood is dark.',
+    }[selectedStyle];
+
+    const lengthGuide = {
+      'tiny':   'Very short: exactly 4 to 6 lines total.',
+      'short':  'Short: exactly 8 to 10 lines total.',
+      'medium': 'Medium: exactly 14 to 18 lines total.',
+      'long':   'Long: exactly 24 to 30 lines total.',
+    }[selectedLength];
+
+    const prompt = `Write a ${selectedStyle} poem${themeClause} embodying a deeply ${selectedMood} mood.
+
+Form requirements: ${styleGuide}
+Length requirement: ${lengthGuide}
+
+Additional rules:
+- Do NOT include a title
+- Do NOT include any commentary, preamble, or explanation
+- Return ONLY the poem text itself`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      const data = await res.json();
+      currentPoem = (data.content?.map(b => b.text || '').join('') || '').trim();
+
+      if (!currentPoem) throw new Error('empty response');
+
+      const eyebrow = `${selectedMood}${theme ? ' · ' + theme : ''} · ${selectedStyle} · ${selectedLength}`;
+      stage.innerHTML = `
+        <div class="poem-eyebrow">${eyebrow}</div>
+        <div class="poem-body">${currentPoem}</div>
+      `;
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => stage.classList.add('loaded'));
+      });
+
+      document.getElementById('poem-meta').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      footer.style.display = 'flex';
+
+    } catch (err) {
+      stage.innerHTML = `<div class="error-msg">Something went wrong — please try again.</div>`;
+    }
+
+    btn.disabled = false;
+  }
+
+  function copyPoem() {
+    if (!currentPoem) return;
+    navigator.clipboard.writeText(currentPoem).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+</script>
+</body>
+</html>
